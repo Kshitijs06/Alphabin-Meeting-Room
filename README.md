@@ -37,6 +37,7 @@ POST /api/bookings Creates a new booking. You send room, date, start time, end t
 GET /api/bookings?date=YYYY-MM-DD Returns all bookings for a given date, sorted by start time.
 DELETE /api/bookings/:id Cancels (deletes) a booking by its id.
 GET /api/rooms/:room/free?date=YYYY-MM-DD Returns the free time slots for a room on a given date.
-Notes
+
+Notes -
 Since storage is in memory, restarting the server clears all bookings. This is fine for learning and demo purposes.
 This project does not need a database or any installation steps, which makes it easy to run and explain.
