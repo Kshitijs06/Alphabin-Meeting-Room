@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meeting Room Booking</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --border: #e2e4e9;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --accent: #3457d5;
+    --accent-dark: #263f9f;
+    --danger: #d64545;
+    --danger-bg: #fdecec;
+    --radius: 10px;
+    --alpha: #3457d5;
+    --beta: #1a9e78;
+    --gamma: #d99324;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 16px 60px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); margin-top: 0; margin-bottom: 24px; font-size: 0.95rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  @media (min-width: 760px) {
+    .grid { grid-template-columns: 340px 1fr; align-items: start; }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card h2 { margin-top: 0; font-size: 1.1rem; }
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 14px 0 6px;
+  }
+  label:first-of-type { margin-top: 0; }
+  select, input[type="date"], input[type="time"], input[type="text"] {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: var(--text);
+  }
+  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .time-row { display: flex; gap: 10px; }
+  .time-row > div { flex: 1; }
+  .hm-select { display: flex; align-items: center; gap: 6px; }
+  .hm-select select { flex: 1; min-width: 0; }
+  .hm-colon { color: var(--muted); font-weight: 700; }
+
+  button.primary {
+    margin-top: 18px;
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 7px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .error-box {
+    margin-top: 14px;
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid #f4c7c7;
+    padding: 10px 12px;
+    border-radius: 7px;
+    font-size: 0.88rem;
+    display: none;
+  }
+  .error-box.show { display: block; }
+
+  .success-box {
+    margin-top: 14px;
+    background: #e9f7ef;
+    color: #1a7a4c;
+    border: 1px solid #bfe9d2;
+    padding: 10px 12px;
+    border-radius: 7px;
+    font-size: 0.88rem;
+    display: none;
+  }
+  .success-box.show { display: block; }
+
+  .schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .schedule-header input[type="date"] { max-width: 200px; }
+
+  .room-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .room-tag.Alpha { background: var(--alpha); }
+  .room-tag.Beta { background: var(--beta); }
+  .room-tag.Gamma { background: var(--gamma); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  tr:last-child td { border-bottom: none; }
+
+  .cancel-btn {
+    background: none;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .cancel-btn:hover { background: var(--danger-bg); }
+
+  .empty-state { color: var(--muted); font-size: 0.9rem; padding: 10px 0; }
+
+  .free-slots { margin-top: 20px; }
+  .free-slots h3 { font-size: 0.95rem; margin-bottom: 10px; }
+  .free-room-block { margin-bottom: 12px; }
+  .free-room-block .room-tag { margin-bottom: 6px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .pill {
+    background: #eef1fb;
+    color: var(--accent-dark);
+    font-size: 0.78rem;
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Meeting Room Booking</h1>
+  <p class="subtitle">Alpha, Beta &amp; Gamma &middot; office hours 09:00&ndash;18:00</p>
+
+  <div class="grid">
+    <!-- Booking form -->
+    <div class="card">
+      <h2>New booking</h2>
+      <form id="booking-form">
+        <label for="room">Room</label>
+        <select id="room" required></select>
+
+        <label for="date">Date</label>
+        <input type="date" id="date" required />
+
+        <div class="time-row">
+          <div>
+            <label for="start-hour">Start time</label>
+            <div class="hm-select">
+              <select id="start-hour" required></select>
+              <span class="hm-colon">:</span>
+              <select id="start-minute" required></select>
+            </div>
+          </div>
+          <div>
+            <label for="end-hour">End time</label>
+            <div class="hm-select">
+              <select id="end-hour" required></select>
+              <span class="hm-colon">:</span>
+              <select id="end-minute" required></select>
+            </div>
+          </div>
+        </div>
+
+        <label for="bookedBy">Booked by</label>
+        <input type="text" id="bookedBy" placeholder="Your name" required />
+
+        <button type="submit" class="primary" id="book-btn">Book</button>
+      </form>
+      <div class="error-box" id="form-error"></div>
+      <div class="success-box" id="form-success"></div>
+
+      <div class="free-slots">
+        <h3>Free slots on selected date</h3>
+        <div id="free-slots-content" class="empty-state">Pick a date to see free slots.</div>
+      </div>
+    </div>
+
+    <!-- Schedule view -->
+    <div class="card">
+      <div class="schedule-header">
+        <h2 style="margin:0;">Schedule</h2>
+        <input type="date" id="schedule-date" />
+      </div>
+      <div id="schedule-error" class="error-box"></div>
+      <div id="schedule-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+
+const roomSelect = document.getElementById('room');
+const dateInput = document.getElementById('date');
+const startHour = document.getElementById('start-hour');
+const startMinute = document.getElementById('start-minute');
+const endHour = document.getElementById('end-hour');
+const endMinute = document.getElementById('end-minute');
+const bookedByInput = document.getElementById('bookedBy');
+const form = document.getElementById('booking-form');
+const bookBtn = document.getElementById('book-btn');
+const formError = document.getElementById('form-error');
+const formSuccess = document.getElementById('form-success');
+const freeSlotsContent = document.getElementById('free-slots-content');
+
+const scheduleDateInput = document.getElementById('schedule-date');
+const scheduleContent = document.getElementById('schedule-content');
+const scheduleError = document.getElementById('schedule-error');
+
+let ROOMS = [];
+
+// Office hours 09:00-18:00 in 15-minute steps, matching the backend's rules exactly.
+const OFFICE_START = '09:00';
+const OFFICE_END = '18:00';
+const STEP_MINUTES = 15;
+
+// Hours 09-18. Minutes are 00/15/30/45 for every hour except the closing
+// hour (18), which only offers :00 since bookings can't run past 18:00.
+function buildHours() {
+  const [sh] = OFFICE_START.split(':').map(Number);
+  const [eh] = OFFICE_END.split(':').map(Number);
+  const hours = [];
+  for (let h = sh; h <= eh; h++) hours.push(h.toString().padStart(2, '0'));
+  return hours;
+}
+
+function minutesForHour(hourStr) {
+  const [eh, em] = OFFICE_END.split(':').map(Number);
+  if (Number(hourStr) === eh) {
+    const mins = [];
+    for (let m = 0; m <= em; m += STEP_MINUTES) mins.push(m.toString().padStart(2, '0'));
+    return mins.length ? mins : ['00'];
+  }
+  return ['00', '15', '30', '45'];
+}
+
+function refreshMinuteOptions(hourSelect, minuteSelect) {
+  const mins = minutesForHour(hourSelect.value);
+  const prev = minuteSelect.value;
+  minuteSelect.innerHTML = mins.map((m) => `<option value="${m}">${m}</option>`).join('');
+  minuteSelect.value = mins.includes(prev) ? prev : mins[0];
+}
+
+function populateTimeSelects() {
+  const hours = buildHours();
+  const hourOptionsHtml = hours.map((h) => `<option value="${h}">${h}</option>`).join('');
+  startHour.innerHTML = hourOptionsHtml;
+  endHour.innerHTML = hourOptionsHtml;
+
+  // Sensible defaults: 09:00 to 09:15.
+  startHour.value = hours[0];
+  refreshMinuteOptions(startHour, startMinute);
+  startMinute.value = '00';
+
+  endHour.value = hours[0];
+  refreshMinuteOptions(endHour, endMinute);
+  const endMins = minutesForHour(endHour.value);
+  endMinute.value = endMins[1] || endMins[0];
+}
+
+function getStartTime() {
+  return `${startHour.value}:${startMinute.value}`;
+}
+function getEndTime() {
+  return `${endHour.value}:${endMinute.value}`;
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function showError(el, msg) {
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideError(el) {
+  el.classList.remove('show');
+  el.textContent = '';
+}
+function showSuccess(el, msg) {
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+async function loadRooms() {
+  const res = await fetch(`${API}/rooms`);
+  const data = await res.json();
+  ROOMS = data.rooms;
+  roomSelect.innerHTML = ROOMS.map((r) => `<option value="${r}">${r}</option>`).join('');
+}
+
+async function loadFreeSlots() {
+  const date = dateInput.value;
+  if (!date) {
+    freeSlotsContent.innerHTML = '<div class="empty-state">Pick a date to see free slots.</div>';
+    return;
+  }
+  const blocks = [];
+  for (const room of ROOMS) {
+    try {
+      const res = await fetch(`${API}/rooms/${encodeURIComponent(room)}/free?date=${date}`);
+      const data = await res.json();
+      if (!res.ok) continue;
+      const pills = data.free.length
+        ? data.free.map((s) => `<span class="pill">${s.start}&ndash;${s.end}</span>`).join('')
+        : '<span class="pill" style="background:#fdecec;color:#d64545;">Fully booked</span>';
+      blocks.push(`
+        <div class="free-room-block">
+          <span class="room-tag ${room}">${room}</span>
+          <div class="pill-row">${pills}</div>
+        </div>
+      `);
+    } catch (e) { /* ignore */ }
+  }
+  freeSlotsContent.innerHTML = blocks.join('') || '<div class="empty-state">No data.</div>';
+}
+
+async function loadSchedule() {
+  hideError(scheduleError);
+  const date = scheduleDateInput.value;
+  if (!date) {
+    scheduleContent.innerHTML = '<div class="empty-state">Pick a date to view the schedule.</div>';
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/bookings?date=${date}`);
+    const data = await res.json();
+    if (!res.ok) {
+      showError(scheduleError, data.error || 'Failed to load schedule.');
+      return;
+    }
+    if (data.length === 0) {
+      scheduleContent.innerHTML = '<div class="empty-state">No bookings for this date.</div>';
+      return;
+    }
+    const rows = data.map((b) => `
+      <tr>
+        <td><span class="room-tag ${b.room}">${b.room}</span></td>
+        <td>${b.start}&ndash;${b.end}</td>
+        <td>${escapeHtml(b.bookedBy)}</td>
+        <td><button class="cancel-btn" data-id="${b.id}">Cancel</button></td>
+      </tr>
+    `).join('');
+    scheduleContent.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>Room</th><th>Time</th><th>Booked by</th><th></th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    scheduleContent.querySelectorAll('.cancel-btn').forEach((btn) => {
+      btn.addEventListener('click', () => cancelBooking(btn.dataset.id));
+    });
+  } catch (e) {
+    showError(scheduleError, 'Network error — could not reach the server.');
+  }
+}
+
+async function cancelBooking(id) {
+  hideError(scheduleError);
+  try {
+    const res = await fetch(`${API}/bookings/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) {
+      showError(scheduleError, data.error || 'Could not cancel booking.');
+      return;
+    }
+    await loadSchedule();
+    await loadFreeSlots();
+  } catch (e) {
+    showError(scheduleError, 'Network error — could not reach the server.');
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideError(formError);
+  formSuccess.classList.remove('show');
+  bookBtn.disabled = true;
+
+  const payload = {
+    room: roomSelect.value,
+    date: dateInput.value,
+    start: getStartTime(),
+    end: getEndTime(),
+    bookedBy: bookedByInput.value,
+  };
+
+  try {
+    const res = await fetch(`${API}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showError(formError, data.error || `Request failed (${res.status})`);
+      return;
+    }
+    showSuccess(formSuccess, `Booked ${data.room} on ${data.date} ${data.start}-${data.end}.`);
+    form.reset();
+    populateTimeSelects();
+    dateInput.value = payload.date;
+    scheduleDateInput.value = payload.date;
+    await loadSchedule();
+    await loadFreeSlots();
+  } catch (err) {
+    showError(formError, 'Network error — could not reach the server.');
+  } finally {
+    bookBtn.disabled = false;
+  }
+});
+
+dateInput.addEventListener('change', loadFreeSlots);
+scheduleDateInput.addEventListener('change', loadSchedule);
+startHour.addEventListener('change', () => refreshMinuteOptions(startHour, startMinute));
+endHour.addEventListener('change', () => refreshMinuteOptions(endHour, endMinute));
+
+(async function init() {
+  await loadRooms();
+  populateTimeSelects();
+  const t = todayStr();
+  dateInput.value = t;
+  scheduleDateInput.value = t;
+  await loadSchedule();
+  await loadFreeSlots();
+})();
+</script>
+</body>
+</html>
